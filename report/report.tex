@@ -1,0 +1,47 @@
+% arara: pdflatex: { draft: yes, shell: yes, options: [--output-directory=build] }
+
+% arara: biber: { options: [ '--output-directory=build' ] }
+% arara: --> if missing(toFile('build/report.bbl')) || changed(toFile('build/report.bbl')) || found(toFile('build/report.log'), 'Citation')
+
+%! arara: makeglossaries: { options: [ '-d', 'build' ] }
+%! arara: --> if changed (toFile('build/report.glo')) || missing (toFile('build/report.gls'))
+
+% arara: pdflatex: { shell: yes, synctex: yes, options: [--output-directory=build] }
+
+% arara: copy: { files: [ 'build/report.pdf' ],
+% arara: --> target: 'backup/report.pdf' }
+
+\documentclass{article}
+
+\usepackage{report.preamble}
+
+\begin{document}
+    % title
+    \title{Introduction to Parallel Computing\\%
+    A.Y. 2023/2024\\%
+    Homework 3: Parallelizing matrix operations using MPI\\%
+    \textbf{Results report}}
+    \author{%
+        Alessandro Iepure, 228023\\%
+        alessandro.iepure@studenti.unitn.it\\%
+        \url{https://github.com/aleiepure/Parallel-assignment3}
+    }
+    \date{13 December 2023}
+    \maketitle
+
+    % abstract
+    \begin{center}
+        \textbf{Abstract}
+    \end{center}
+    This document analyzes the results and methodologies used while working on %
+    the assignment in the title. All work is original and done without input %
+    from outside sources except where explicitly noted.
+
+    % content
+    \input{sections/01-transposition}
+    \clearpage
+    \input{sections/02-omp-mpi-comparison}
+    
+    \nocite{*}
+    \printbibliography
+\end{document}

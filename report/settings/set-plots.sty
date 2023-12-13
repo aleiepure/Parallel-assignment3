@@ -1,0 +1,21 @@
+\usepackage{pgfplots, pgfplotstable, tikzscale, standalone}
+\pgfplotsset{width=10cm,compat=1.15}
+
+\usetikzlibrary{calc, matrix, backgrounds}
+\usepgfplotslibrary{external}
+\usepgfplotslibrary{groupplots} 
+
+
+\pgfplotsset{
+        % define a `cycle list' for marker
+        cycle list/.define={marks}{
+            every mark/.append style={solid,fill=\pgfkeysvalueof{/pgfplots/mark list fill}},mark=*\\
+            every mark/.append style={solid,fill=\pgfkeysvalueof{/pgfplots/mark list fill}},mark=square*\\
+            every mark/.append style={solid,fill=\pgfkeysvalueof{/pgfplots/mark list fill}},mark=triangle*\\
+            every mark/.append style={solid,fill=\pgfkeysvalueof{/pgfplots/mark list fill}},mark=diamond*\\
+            every mark/.append style={solid,fill=\pgfkeysvalueof{/pgfplots/mark list fill}},mark=x\\
+        },
+    }
+
+\tikzset{every picture/.style={line width=0.75pt}} 
+

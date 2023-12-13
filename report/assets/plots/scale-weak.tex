@@ -1,0 +1,106 @@
+\begin{figure}[h!tb]%
+    \centering
+    \captionsetup{type=plot}
+    \caption{\label{plot:weak-scale}Weak scale graph by size - CPUs ratio}
+    \begin{tikzpicture}%
+        \begin{groupplot}[
+                group style={
+                    group size=2 by 1,
+                    group name=plot,
+                    xlabels at=edge bottom,
+                    ylabels at=edge left,
+                    vertical sep=1.5cm,
+                    horizontal sep=1.5cm,
+                }, 
+                width={0.45\linewidth},
+                xlabel={CPUs},
+                ylabel={Time [s]},
+                xtick={1, 4, 16, 64},
+                legend to name=legend,
+                legend columns=-1,
+                cycle multiindex* list={
+                    color list
+                        \nextlist
+                    marks
+                        \nextlist
+                },
+            ]
+            \nextgroupplot[
+                title={Normal},
+                xmode=log, 
+                log ticks with fixed point,
+            ]
+
+            \addplot
+                coordinates {
+                    (1, 0.00003)
+                    (4, 0.01306)
+                    (16, 0.01504)
+                    (64, 0.22652)
+                };
+
+            \addplot
+                coordinates {
+                    (1, 0.00013)
+                    (4, 0.03965)
+                    (16, 0.02647)
+                    (64, 0.72118)
+                };
+        
+            \addplot
+                coordinates {
+                    (1, 0.00051)
+                    (4, 0.01104)
+                    (16, 0.13280)
+                    (64, 5.16715)
+                };
+
+            \addplot
+                coordinates {
+                    (1, 0.00298)
+                    (4, 0.06305)
+                    (16, 0.31432)
+                };
+
+            \nextgroupplot[
+                title={Blocks},
+                xmode=log, 
+                log ticks with fixed point,
+            ]
+            \addplot
+                coordinates {
+                    (1, 0.00012)
+                    (4, 0.01700)
+                    (16, 0.01117)
+                    (64, 0.19813)
+                };
+
+            \addplot
+                coordinates {
+                    (1, 0.00035)
+                    (4, 0.18536)
+                    (16, 0.04131)
+                    (64, 0.90659)
+                };
+        
+            \addplot
+                coordinates {
+                    (1, 0.00137)
+                    (4, 0.09559)
+                    (16, 0.15336)
+                    (64, 3.69552)
+                };
+
+            \addplot
+                coordinates {
+                    (1, 0.00577)
+                    (4, 0.09333)
+                    (16, 0.65696)
+                    (64, 14.97982)
+                };
+
+                \legend{$\frac{64}{1}$, $\frac{128}{1}$, $\frac{256}{1}$, $\frac{512}{1}$}
+        \end{groupplot}
+    \end{tikzpicture}
+    \ref{legend}
+\end{figure}

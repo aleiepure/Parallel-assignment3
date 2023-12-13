@@ -1,0 +1,127 @@
+\section{\label{sec:transposition}Parallel matrix transposition}
+
+This exercise involves the implementation of two matrix transposition algorithms %
+using MPI (Message Passing Protocol) for parallelization. The goal is to compare %
+the scalability and efficiency between both versions.
+
+Transposing a matrix involves flipping it over its main diagonal, exchanging %
+rows and columns, resulting in a new matrix where the rows of the original one %
+become the columns of the transposed matrix and vice versa.\\
+When handling sequential codes, this is relatively straightforward. However, %
+the introduction of MPI parallelization complicates the implementation.
+
+For part 1, the initial implementation mirrored that of the previous assignment. %
+Improving it with MPI for part 2 proved more challenging. It required the %
+evaluation of various strategies to achieve a correct data subdivision. %
+What follows is a concise breakdown of the thinking process that led me to the %
+implemented logic.
+
+\begin{wrapfigure}{l}{0.4\textwidth}%
+    \vspace{-0.8cm}
+    \centering%
+    \caption{\label{image:pointers-to-pointers}Idea 1 - Array of pointers to arrays}%
+    \includegraphics[width=0.4\linewidth]{pointers-to-pointers.tex}%
+\end{wrapfigure}%
+The first concept was to leverage the way \textit{C} stores matrices as an array %
+of pointers to other arrays (Figure \ref{image:pointers-to-pointers}). However, %
+I abandoned this idea quickly due to the challenges in passing such data structure to %
+MPI's collective operation functions (like \texttt{MPI\_Scatter()}, %
+\texttt{MPI\_Gather()}, etc.). This led me to treat the matrix as a one-dimensional %
+array (Figure \ref{image:matrix-as-array}). This turned out to be a winning approach %
+and ultimately what I implemented.\\%
+\begin{figure}[h]%
+    \centering%
+    \caption{\label{image:matrix-as-array}Idea 2 - Matrix as a 1D array}%
+    \includegraphics[width=0.7\linewidth]{matrix-as-array.tex}%
+\end{figure}%
+
+In task 3, I opted for a different approach: I divided the matrix %
+(still represented as a 1-D array) into sizable blocks of equal dimensions. Each of these %
+blocks is further subdivided and distributed to the available CPUs as smaller blocks. %
+These smaller blocks are the local copy of each processor and are transposed and %
+sent back to the main CPU. The latter is responsible for reassembling the transposed %
+smaller portions into the transposed large block. \\%
+Before iterating to the next block, the transposed block is positioned correctly %
+to create the final transposed matrix, also stored in a%
+1-D array. All matrices are assumed to be square, and the number of blocks dividing the matrix %
+is equal to the number of processors. While both limitations are present for simplicity, %
+with small modifications any number can be used, provided it is mathematically %
+compatible.
+\begin{figure}[h]
+    \caption{\label{image:transpose-blocks}Idea 3 - Divide into blocks, each processed individually}
+    \centering
+    \includegraphics[width=0.7\linewidth]{transpose-blocks.tex}
+\end{figure}
+
+Although the assignment asked for a single executable with explicit functions for %
+the sequential and parallel versions of the 2 algorithms, I could not find a reliable %
+way to divide my logic into separate functions. Due to time constraints, I decided %
+to write them as 2 separate programs. I interpreted the sequential requirement as %
+the execution of the same parallel code restricted to only one CPU. Each program is called %
+repeatedly using a series of PBS files - \textit{bash} scripts that detail the 
+necessary resources required for the execution on the cluster.
+
+\subsection*{Result analysis}
+The final code and supporting files were uploaded to the University's HPC cluster %
+and queued for execution. The nodes responsible for the computations were %
+\texttt{hpc-c11-node12.unitn.it} (for 1-CPU and 4-CPUs executions), %
+\texttt{hpc-c11-node01.unitn.it}, and \texttt{hpc-c04-node01.unitn.it}. The first three %
+nodes are equipped with an Intel\textsuperscript{\textregistered} %
+Xeon\textsuperscript{\textregistered} Gold 6252N CPU running at 2.30GHz and 1024GB %
+of RAM, while the fourth has an Intel\textsuperscript{\textregistered} %
+Xeon\textsuperscript{\textregistered} Gold 6140M CPU clocked at 2.30GHz and 768GB %
+of RAM.
+
+To meet the assignment's requirement for both strong and weak scaling, two sets of %
+input matrix sizes were used. The weak scaling has progressively increasing %
+workloads, while the strong scaling maintains them constant. Table \ref{table:scale-weak} %
+and table \ref{table:scale-strong} report the execution times for both weak %
+and strong scaling respectively, alongside the achieved bandwidth, %
+calculated using Equation \ref{eq:bandwidth}. Additionally, plot \ref{plot:weak-scale} %
+and plot \ref{plot:strong-scale} visualize these results.
+
+\begin{equation}
+    \label{eq:bandwidth}
+    \text{Bandwidth} = \frac{B_r * B_w * \text{Times} * \text{size\_of(\textit{float})}}{\text{Run Time}} = 
+    \begin{cases}
+        \frac{\text{Size}^2 * 3 * 4}{\text{Run Time}}, & \text{without blocks}\\
+        \frac{\text{Size}^2 * 4 * 4}{\text{Run Time}}, & \text{with blocks}
+    \end{cases}\qquad\text{[Byte/s]}
+\end{equation}
+
+Unfortunately, I had difficulties obtaining results for the missing values in the %
+tables above as the execution would stall until the allocated wall time was reached, %
+resulting in the process being terminated by the system. This is probably happening %
+because the assigned nodes have insufficient memory available.
+
+\input{assets/tables/scale-weak}
+\input{assets/tables/scale-strong}
+
+\input{assets/plots/scale-weak}
+\input{assets/plots/scale-strong}
+
+Looking at the weak scaling results (plot \ref{plot:weak-scale}), we can observe %
+that, although the workload of each CPU remains constant, the time required for %
+computation increases as the number of CPUs rises. %
+This is because communications between the processes increase as well, %
+becoming more frequent and resource-intensive. \\%
+On the other hand, the strong scaling (plot \ref{plot:strong-scale}) shows a general decreasing %
+trend, pronounced for matrices of size 8192 in the %
+normal algorithm and 32768 in the block one. In those cases, the curve starts to %
+flatten out with executions executed by 4 and 16 CPUs respectively.
+
+The parallel scalability of both algorithms was evaluated using the bandwidth %
+as the performance metric. Plot \ref{plot:performance}, plot \ref{plot:speedup}, and %
+plot \ref{plot:efficiency} show us a representation of the performance, speedup, and %
+efficiency respectively.
+
+\input{assets/plots/performance}
+\input{assets/plots/speedup}
+\input{assets/plots/efficiency}
+
+Contrary to what we would expect, the performance of both algorithms is quite %
+irregular. Typically, the bandwidth should rise with the increase in CPUs, but %
+in this case, it increases up to a point before declining. What is said holds %
+valid for both the normal and the blocks algorithms. All the above is also %
+reflected in the speedup and efficiency graphs, which show data scattered all %
+over the place with a general downward trend with the increase in the number of CPUs.

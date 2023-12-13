@@ -1,0 +1,62 @@
+#!/bin/bash
+#
+# Introduction to Parallel Computing (A.A. 2023/2024)
+# Homework 3: Parallelizing matrix operations using MPI
+#
+# PBS job file with 16 CPU
+#
+# Alessandro Iepure
+#
+
+#PBS -N job_np16
+#PBS -q short_cpuQ
+#PBS -o /home/alessandro.iepure/assignment3/out/stdout_np16.o
+#PBS -e /home/alessandro.iepure/assignment3/out/stderr_np16.e
+#PBS -l select=1:ncpus=16:mpiprocs=16
+
+# Abort on error
+set -e
+
+# Load required modules
+module load gcc91
+module load mpich-3.2.1--gcc-9.1.0
+
+# Workaround cluster issues with compiler versions
+gcc() {
+    gcc-9.1.0 "$@"
+}
+gcc --version
+mpicc --version
+
+# Get the list of unique nodes assigned to the job, loop through each to get 
+# the architecture
+NODES=$(sort -u $PBS_NODEFILE)
+for NODE in $NODES; do
+    echo "Node: $NODE"
+    ssh $NODE "lscpu"
+done
+
+# Working directory
+cd /home/$USER/assignment3
+
+# Weak scaling
+printf "\n---\nWeak scaling\n"
+printf "size 1024, normal, %s\n" $(mpiexec bin/matT.out 1024)
+printf "size 1024, blocks, %s\n" $(mpiexec bin/matT_blocks.out 1024)
+printf "size 2048, normal, %s\n" $(mpiexec bin/matT.out 2048)
+printf "size 2048, blocks, %s\n" $(mpiexec bin/matT_blocks.out 2048)
+printf "size 4096, normal, %s\n" $(mpiexec bin/matT.out 4096)
+printf "size 4096, blocks, %s\n" $(mpiexec bin/matT_blocks.out 4096)
+printf "size 8192, normal, %s\n" $(mpiexec bin/matT.out 8192)
+printf "size 8192, blocks, %s\n" $(mpiexec bin/matT_blocks.out 8192)
+
+# Strong scaling
+printf "\n---\nStrong scaling\n"
+printf "size 512, normal, %s\n" $(mpiexec bin/matT.out 512)
+printf "size 512, blocks, %s\n" $(mpiexec bin/matT_blocks.out 512)
+printf "size 2048, normal, %s\n" $(mpiexec bin/matT.out 2048)
+printf "size 2048, blocks, %s\n" $(mpiexec bin/matT_blocks.out 2048)
+printf "size 8192, normal, %s\n" $(mpiexec bin/matT.out 8192)
+printf "size 8192, blocks, %s\n" $(mpiexec bin/matT_blocks.out 8192)
+# printf "size 32768, normal, %s\n" $(mpiexec bin/matT.out 32768)
+printf "size 32768, blocks, %s\n" $(mpiexec bin/matT_blocks.out 32768)
